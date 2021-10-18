@@ -1,2 +1,2 @@
 # CCF-CSP-code
-My code() of CCF Certified Software Professional Examination.
+My code(C++) of CCF Certified Software Professional Examination.
