@@ -1,3 +1,5 @@
+// 1. 注意配额ld、lr为0代表不限制，只有在不为0时才需要检查是否满足
+// 2. 注意看题目的限制，如果N或者输入规模较小时用vector或map来优化时间性能
 # include <iostream>
 # include <string>
 # include <vector>
@@ -15,7 +17,6 @@ struct file{
     int type = 0;//文件类型：1普通文件，2目录文件
     int father = 0;//父节点
     map<string,int> child;
-    bool valid = false;//配额是否有效
 }File[N];
 
 //工具函数1：将路径切为字符串数组
@@ -75,7 +76,6 @@ bool create(string path, ll size){
             File[fileId].father = dirId;
             File[dirId].child[pathfiles[i]] = fileId;
             retreat.push_back(pair<int,string>{dirId,pathfiles[i]});//加入撤销集合中方便后续撤销创建的目录
-//            cout<<"创建目录文件"<<pathfiles[i]<<" "<<fileId<<endl;
             dirId = fileId;
             fileId++;
         }
@@ -93,14 +93,14 @@ bool create(string path, ll size){
     // 3.1 如果普通文件不存在，检查配额后创建
     if(curId==0){
         // 3.1.1 检查父目录配额
-        if(File[dirId].valid && File[dirId].ld - File[dirId].lds < size) {//不满足父目录配额条件
+        if(File[dirId].ld>0 && File[dirId].ld - File[dirId].lds < size) {//不满足父目录配额条件
             drawback();
             return false;
         }
         // 3.1.2 检查祖先目录后代配额
         int rootId = dirId;
         while(rootId!=-1){//一直查到根目录
-            if(File[rootId].valid && (File[rootId].lr - File[rootId].lrs < size)){
+            if(File[rootId].lr>0 && (File[rootId].lr - File[rootId].lrs < size)){
                 drawback();
                 return false;
             }
@@ -126,13 +126,13 @@ bool create(string path, ll size){
     }// 3.2 如果普通文件已经存在，检查配额后替换
     else if(File[curId].type==1){
         // 3.2.1 检查父目录配额ld
-        if(File[dirId].valid && File[curId].size<size && File[dirId].ld - File[dirId].lds < size - File[curId].size){
+        if(File[dirId].ld>0 && File[curId].size<size && File[dirId].ld - File[dirId].lds < size - File[curId].size){
             return false;
         }
         // 3.2.2 检查祖先目录配额lr
         int rootId = dirId;
         while(rootId!=-1){
-            if(File[rootId].valid && File[curId].size<size && File[rootId].lr - File[rootId].lrs < size - File[curId].size){
+            if(File[rootId].lr>0 && File[curId].size<size && File[rootId].lr - File[rootId].lrs < size - File[curId].size){
                 return false;
             }
             rootId = File[rootId].father;
@@ -205,11 +205,10 @@ bool quote(string path,ll ld_,ll lr_){
         if(curId==0 || File[curId].type==1) return false;
         dirId = curId;
     }
-    // 2. 检查该目录的ld配额能否设置
-    if(File[curId].lds > ld_ || File[curId].lrs > lr_) return false;
+    // 2. 检查该目录的ld配额能否设置，注意特殊情况，ld或lr为0代表不限制
+    if((ld_>0 && File[curId].lds > ld_) || (lr_>0 && File[curId].lrs > lr_)) return false;
     File[curId].ld = ld_;
     File[curId].lr = lr_;
-    File[curId].valid = true;
     return true;
 }
 
@@ -232,7 +231,6 @@ int main(){
             default:break;
         }
         flag?(cout<<'Y'<<endl):(cout<<'N'<<endl);
-//        cout<<File[0].ld<<' '<<File[0].lds <<' '<<File[0].lr<<' '<<File[0].lrs<<endl;
     }
     return 0;
 }
