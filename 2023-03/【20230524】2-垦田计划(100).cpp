@@ -1,3 +1,6 @@
+/**
+ * 算法：二分
+*/
 #include <iostream>
 #include <unordered_map>
 #include <algorithm>

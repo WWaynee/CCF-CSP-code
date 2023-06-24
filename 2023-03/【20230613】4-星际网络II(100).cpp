@@ -1,3 +1,7 @@
+/**
+ * 数据结构：线段树
+ * 技巧：离散化+1处理
+*/
 #include <iostream>
 #include <string>
 #include <vector>
